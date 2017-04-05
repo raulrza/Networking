@@ -4,10 +4,10 @@
 Raul Bringas
 
 .DATE   
-12/21/2016
+04/04/2017
 
 .VERSION
-1.1
+1.2
 
 .DESCRIPTION
 
@@ -24,6 +24,7 @@ variables to match your particular Outlook Folders.
 .BUG_FIXES
 
 BUG_ID# 1: Resolved an unhandled exception when trying to check null Shutdown Hosts.
+BUG_ID# 2: Added code to parse through the subject lines and remove duplicate hosts.
                                                           
 #>
 
@@ -146,6 +147,10 @@ While ($true) {
     # The trim command does not set the array to $null instead check for an empty string " "    
     $SubjectLineShutdown = $SubjectLineShutdown -replace ".{1}$"
 
+    # Select only the unique hostnames to prevent checking the same host multiple times
+    $SubjectLineHeartbeat = $SubjectLineHeartbeat | Select -uniq
+    $SubjectLineShutdown = $SubjectLineShutdown | Select -uniq
+    
     # Get the current date and time before running the heartbeat host check
     $StartDateTime = Get-Date
     Write-Host -ForegroundColor DarkGray "Starting SCOM Heartbeat Host Check: " $StartDateTime
