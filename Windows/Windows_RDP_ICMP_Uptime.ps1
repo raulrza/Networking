@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 Author: Raul Bringas
 
@@ -24,7 +24,7 @@ Purpose: This script will check Windows hosts for Uptime, ICMP, and RDP connecti
         "c:\RDP_ICMP_Uptime_Log.csv" - CSV format used to sort by uptime and RDP/ICMP status.
 
 
-Date: 4/21/2017
+Date: 5/10/2017
 
 #>
 
@@ -33,6 +33,7 @@ $DateTime = Get-Date
 # Grab this info from user and use Test-Path to validate/prompt
 $LogPath = "c:\RDP_ICMP_Uptime_Log"
 $UptimeLog = "$LogPath.txt"
+$SleepTimer = 1800
 
 Function ScriptMode($Run_Mode, $Hosts_Text_File) {
     # Check if the script will be run interactively
@@ -78,7 +79,6 @@ Function GetHostUptime ($Computer_Name){
     
     Catch {
     
-            #Write-Output "Uptime: Not available" | Tee-Object -File $UptimeLog -append
             $HostUptime = "NA"
     }
 
@@ -121,7 +121,7 @@ Function CheckWindowsHosts ($HostNames){
                     $HostUptimeCSVD = "NA"
                     $HostUptimeCSVH = "NA"
                     $HostUptimeCSVM = "NA"
-
+                    Write-Host -BackgroundColor Black -ForegroundColor Red "ICMP - $ICMPState"
             }    
 
         Write-Output "ICMP - $ICMPState" | Tee-Object -File $UptimeLog -append
@@ -150,6 +150,7 @@ Function CheckWindowsHosts ($HostNames){
     
         # RDP connection to the host failed, output the RDP status as Red
         $RDPState = "Down"
+        Write-Host -BackgroundColor Black -ForegroundColor Red "RDP - $RDPState" 
     
         }
     
@@ -157,8 +158,8 @@ Function CheckWindowsHosts ($HostNames){
     Write-Output "" | Tee-Object -File $UptimeLog -append
 
     # Ouput variables in CSV friendly format
-    # Host,Uptime,ICMP,RDP
-    Write-Output "$Host_Name,$HostUptimeCSVD,$HostUptimeCSVH,$HostUptimeCSVM,$ICMPState,$RDPState" >> $UptimeLogCSV
+    # Host,Uptime,ICMP,RDP,Script Runtime
+    Write-Output "$Host_Name,$HostUptimeCSVD,$HostUptimeCSVH,$HostUptimeCSVM,$ICMPState,$RDPState,$DateTime" >> $UptimeLogCSV
 
     }
 
@@ -172,7 +173,7 @@ $RunMode = Read-Host "How would you like to run the script? `nA - Automated (Usi
 If ($RunMode -like "A") { $HostsTextFile = Read-Host "Enter the path to a text file with hostnames to check:`n" }
 
 $UptimeLogCSV = "$LogPath-CSV.txt"
-Write-Output "Host,Uptime: Days,Hours,Minutes,ICMP,RDP" > $UptimeLogCSV
+Write-Output "Host,Uptime: Days,Hours,Minutes,ICMP,RDP,Script Last Runtime" > $UptimeLogCSV
 
 While ($true){
     
@@ -185,10 +186,10 @@ While ($true){
     ScriptMode $RunMode $HostsTextFile
 
     Write-Output "Scan results have been saved to $LogPath.csv in CSV format..."
-    Write-Output "Waiting 15 minutes before checking the hosts again!"
+    Write-Output "Waiting $SleepTimer seconds before checking the hosts again!`n"
     
 
     Import-Csv $UptimeLogCSV | Export-CSV "$LogPath.csv" -NoTypeInformation
-    Sleep 900
+    Sleep $SleepTimer
 
 }
